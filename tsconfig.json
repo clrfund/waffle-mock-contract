@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true,
+  },
+  "include": [
+    "src",
+    "test",
+    "build/**/*.json"
+  ],
+  "files": ["./hardhat.config.ts"]
+}
