@@ -6,13 +6,13 @@ import {
   Interface,
   Fragment,
   FunctionFragment,
+  JsonFragment,
+  JsonRpcProvider,
   AbiCoder,
 } from 'ethers'
-import type { JsonFragment } from '@ethersproject/abi'
 
-import { JsonRpcProvider } from '@ethersproject/providers'
+import DoppelgangerContract from './Doppelganger.json'
 import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider'
-import { artifacts } from 'hardhat'
 
 type ABI = string | Array<Fragment | JsonFragment | string>
 
@@ -151,7 +151,6 @@ type DeployOptions = {
 }
 
 async function deploy(signer: Signer, options?: DeployOptions) {
-  const DoppelgangerContract = await artifacts.readArtifact('Doppelganger')
   if (options) {
     const { address, override } = options
     const provider = signer.provider
