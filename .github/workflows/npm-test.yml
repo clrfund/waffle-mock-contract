@@ -1,0 +1,42 @@
+name: Test npm package import
+
+on:
+  workflow_dispatch:
+  push:
+    bracnhes:
+      - main
+
+jobs:
+
+  test-import-npm-package:
+    name: Test Import NPM Package
+
+    runs-on: ubuntu-latest
+    env:
+      npm_config_registry: http://localhost:8043
+
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+
+      - name: Checkout repository and store in a directory with NPM package name
+        uses: actions/checkout@v3
+        with:
+          path: "faux-npm/@clrfund/waffle-mock-contract"
+
+      - name: Install and run Faux NPM Registry
+        uses: ethers-io/hijack-npm-action
+
+      - name: Copy tests to working directory
+        run: cp -r faux-npm/@clrfund/waffle-mock-contract/* .
+
+      - name: Search and replace import of ../src to @clrfund/waffle-mock-contract
+        run: sed -i'' "s#../src#@clrfund/waffle-mock-contract#g" test/*
+
+      - name: Install packages
+        run: yarn
+
+      - name: Run tests
+        run: npm test
