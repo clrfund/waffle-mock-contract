@@ -7,12 +7,10 @@ import {
   Fragment,
   FunctionFragment,
   JsonFragment,
-  JsonRpcProvider,
   AbiCoder,
 } from 'ethers'
 
 import DoppelgangerContract from './Doppelganger.json'
-import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider'
 
 type ABI = string | Array<Fragment | JsonFragment | string>
 
@@ -145,6 +143,10 @@ class Stub implements StubInterface {
   }
 }
 
+function isHardhatProvider(provider: any) {
+  return provider._hardhatNetwork || provider._hardhatProvider
+}
+
 type DeployOptions = {
   address: string
   override?: boolean
@@ -153,14 +155,16 @@ type DeployOptions = {
 async function deploy(signer: Signer, options?: DeployOptions) {
   if (options) {
     const { address, override } = options
-    const provider = signer.provider
-    if (
-      !(provider instanceof JsonRpcProvider) &&
-      !(provider instanceof HardhatEthersProvider)
-    ) {
+    const provider = signer.provider as any
+    if (!provider) {
       throw new Error(
-        'Can only deploy mock contract using' +
-          ' JsonRpcProvider or HardhatEthersProvider'
+        'Missing a provider. Make sure to connect with a JsonRpcProvider'
+      )
+    }
+    if (!(provider as any).send || !(provider as any).getCode) {
+      throw new Error(
+        'Can only deploy mock contract with a provider' +
+          ' that supports calls like send() and getCode()'
       )
     }
     if (!override && (await provider.getCode(address)) !== '0x') {
@@ -169,20 +173,18 @@ async function deploy(signer: Signer, options?: DeployOptions) {
           'If you want to override it, set the override parameter.'
       )
     }
+    const setCodeCommand = isHardhatProvider(provider)
+      ? 'hardhat_setCode'
+      : 'evm_setAccountCode'
     if (
-      (provider as any)._hardhatNetwork ||
-      provider instanceof HardhatEthersProvider
+      await provider.send(setCodeCommand, [
+        address,
+        DoppelgangerContract.deployedBytecode,
+      ])
     ) {
-      if (
-        await provider.send('hardhat_setCode', [
-          address,
-          DoppelgangerContract.deployedBytecode,
-        ])
-      ) {
-        return new Contract(address, DoppelgangerContract.abi, signer)
-      } else throw new Error(`Couldn't deploy at ${address}`)
-    } else {
-    }
+      return new Contract(address, DoppelgangerContract.abi, signer)
+    } else
+      throw new Error(`Couldn't deploy at ${address} with ${setCodeCommand}`)
   }
   const factory = new ContractFactory(
     DoppelgangerContract.abi,
@@ -192,10 +194,7 @@ async function deploy(signer: Signer, options?: DeployOptions) {
   return factory.deploy()
 }
 
-function createMock<T extends Contract>(
-  abi: ABI,
-  mockContractInstance: Contract
-): MockContract {
+function createMock(abi: ABI, mockContractInstance: Contract): MockContract {
   const { fragments } = new Interface(abi)
   const encoder = new AbiCoder()
 
@@ -234,7 +233,7 @@ export async function deployMockContract<T extends Contract = Contract>(
 ): Promise<MockContract> {
   const mockContractInstance = (await deploy(signer, options)) as Contract
 
-  const mock = createMock<T>(abi, mockContractInstance)
+  const mock = createMock(abi, mockContractInstance)
   const mockContractInstanceAddress = await mockContractInstance.getAddress()
   const contract = new Contract(mockContractInstanceAddress, abi, signer)
   const mockedContract = contract as unknown as MockContract
