@@ -7,19 +7,19 @@ on:
       - main
 
 jobs:
-
   test-import-npm-package:
     name: Test Import NPM Package
 
     runs-on: ubuntu-latest
     env:
       npm_config_registry: http://localhost:8043
+      NODE_VERSION: 18.x
 
     steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v1
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Checkout repository and store in a directory with NPM package name
         uses: actions/checkout@v3
