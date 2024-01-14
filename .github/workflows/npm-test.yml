@@ -26,6 +26,3 @@ jobs:
         with:
           path: "faux-npm/@clrfund/waffle-mock-contract"
 
-      - name: Install and run Faux NPM Registry
-        uses: ethers-io/hijack-npm-action
-
