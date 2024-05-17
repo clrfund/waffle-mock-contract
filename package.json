@@ -22,7 +22,7 @@
     "default": "dist/cjs/src/index.js"
   },
   "dependencies": {
-    "ethers": "^6.9.2"
+    "ethers": "^6.12.1"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",
