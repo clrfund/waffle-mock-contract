@@ -39,4 +39,5 @@ jobs:
         export VERSION_NUMBER=$(node -e "const pkg=require('./package.json'); console.log(pkg.version)")
         export VERSION="v${VERSION_NUMBER}"
         git push origin
+        git tag -a "${VERSION}" -m "${VERSION}"
         git push origin --tags
